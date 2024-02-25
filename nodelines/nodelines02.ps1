@@ -1,12 +1,21 @@
+# A continous line made of horizontal and verticle segments. A circle is drawn at points of intersection to give the appearance of nodes.
+# The line grows from dark to light to give the appearance of depth.
+# In this version, segments always traverse a boundry to an adjacent quadrant of the bitmap area. Added the glow feature to give depth to segments.
+
 # Configurable Variables
-$picWidth = 1920
-$picHeight = 1080
+$picWidth = (1584/2)
+$picHeight = (396/2)
 $nodesize = 12
 $linewidth = 2
 $iterations = 250
 $glow = $true
 
+$workfolder = "c:\temp\nodelines"
+
 Add-Type -AssemblyName System.Drawing
+
+New-Item -ItemType Directory -Path $workfolder -ErrorAction SilentlyContinue
+$scriptname = $MyInvocation.MyCommand.Name.Split(".")[0]
 
 Write-Host "Running . . ."
 
@@ -86,7 +95,7 @@ $bitmapGraphics.FillEllipse($brush,$x1-($nodesize / 2 * $currentFactor),$y1-($no
 $bitmapGraphics.DrawEllipse($pen,$x1-($nodesize / 2 * $currentFactor),$y1-($nodesize / 2 * $currentFactor),($nodesize  * $currentFactor),($nodesize  * $currentFactor))
 
 
-$outFile = $PSScriptRoot  + $runmode + "_" + (Get-Date -UFormat %Y%m%d_%H%M%S) + ".png"
+$outFile = "$workfolder\$scriptname-$(Get-Date -UFormat %Y%m%d_%H%M%S).png"
 $bitmap.Save($outFile, [System.Drawing.Imaging.ImageFormat]::Png)
 Invoke-Item $outFile
 $bitmap.Dispose()

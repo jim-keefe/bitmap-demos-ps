@@ -1,84 +1,28 @@
-#==================================================
-# Functions
-#==================================================
+# A continous line made of horizontal and verticle segments. A circle is drawn at points of intersection to give the appearance of nodes.
+# The line changes color gradually based on the $colors defined.
+# In this version, segments always traverse a boundry to an adjacent quadrant of the bitmap area. Added the glow feature to give depth to segments.
 
-# This function uses the colors object to set an RGB color value and fade beween colors. It tracks current values for the color status values in the $currentColor object
-function Set-Color {
-    # If the iterations are low the increment amount may exceed the acceptable color range during fades. This function insures accptable values for RGB.
-    function Check-Color ($tempColor){
-        if ($tempColor -gt 255) { return 255}
-        if ($tempColor -lt 0) { return 0 }
-        return $tempColor
-    }
-
-    # If we are just starting, read in the first color
-    if (!$currentColor.color1){
-        $currentColor.color1 = $colors."color$('{0:d2}' -f [int]$currentColor.colorindex)"
-        $currentColor.r = $currentColor.color1.r
-        $currentColor.g = $currentColor.color1.g
-        $currentColor.b = $currentColor.color1.b
-        $currentColor.color2 = $colors."color$('{0:d2}' -f ([int]($currentColor.colorindex) + 1))"
-    }
-
-    # For every color in the list, show the color for a period, then fade to the next color
-    if ($currentColor.colorPhaseCounter -lt $currentColor.colorIntervalCount)
-    {
-        # Increment the counter for the current phase
-        $currentColor.colorPhaseCounter ++
-
-    } else {
-        # Reset the phase counter, 
-        $currentColor.colorPhaseCounter = 1
-        
-        # Go to the next phase
-        $currentColor.colorPhase ++
-        
-        # Flip the bit on whether this is a fade phase
-        if ($currentColor.fade) { $currentColor.fade = $false } else { $currentColor.fade = $true }
-        
-        # If the next phase is a fade phase then load in the new colors
-        if (!$currentColor.fade){
-            $currentColor.colorindex ++
-            $currentColor.color1 = $colors."color$('{0:d2}' -f [int]$currentColor.colorindex)"
-            $currentColor.r = $currentColor.color1.r
-            $currentColor.g = $currentColor.color1.g
-            $currentColor.b = $currentColor.color1.b
-            # Load the next color unless we are at the end of our colors
-            if (!(($currentColor.colorindex + 1) -gt $colors.count)) {
-                $currentColor.color2 = $colors."color$('{0:d2}' -f ([int]($currentColor.colorindex) + 1))"
-            }
-        } else {
-            # The new phase is a fade. Determine the r,g and b color increment amount
-            # for each interval to get from the current color to the next color
-            $currentColor.rIncrement = ($currentColor.color2.r - $currentColor.color1.r) / $currentColor.colorIntervalCount
-            $currentColor.gIncrement = ($currentColor.color2.g - $currentColor.color1.g) / $currentColor.colorIntervalCount
-            $currentColor.bIncrement = ($currentColor.color2.b - $currentColor.color1.b) / $currentColor.colorIntervalCount
-        }
-    }
-
-    if ($currentColor.fade){
-        # Increment the colors during a fade phase
-        $currentColor.r = Check-Color($currentColor.r + $currentColor.rIncrement)
-        $currentColor.g = Check-Color($currentColor.g + $currentColor.gIncrement)
-        $currentColor.b = Check-Color($currentColor.b + $currentColor.bIncrement)
-    }
-    
-}
+# source the color functions
+$myscriptpath = $MyInvocation.MyCommand.Path
+$myscriptpathparent = (get-item $myscriptpath).Directory
+. "$myscriptpathparent\color_functions.ps1"
 
 #==================================================
 # Variables
 #==================================================
 
 # Configurable Variables
-$picWidth = 1920 * 2
-$picHeight = 1080 * 2
+$picWidth = (1584/2)
+$picHeight = (396/2)
 $nodesize = 10
 $linewidth = 3
-$iterations = 150
-$glow = $true
+$iterations = 100
+$glow = $false
+
+$workfolder = "c:\temp\nodelines"
 
 # The list of colors in order. There are a few examples below
-$colors = @{
+$colors1 = @{
     color01 = @{
         r = 20
         g = 0
@@ -90,7 +34,7 @@ $colors = @{
         b = 128
     }
 }
-$colors1 = @{
+$colors = @{
     color01 = @{
         r = 128
         g = 0
@@ -150,6 +94,9 @@ $currentColor = @{
 #==================================================
 
 Add-Type -AssemblyName System.Drawing
+
+New-Item -ItemType Directory -Path $workfolder -ErrorAction SilentlyContinue
+$scriptname = $MyInvocation.MyCommand.Name.Split(".")[0]
 
 Write-Host "Running . . ."
 
@@ -219,7 +166,6 @@ for ($i = 1;  $i -lt $iterations; $i++){
     $bitmapGraphics.FillEllipse($brush,$x1-($nodesize / 2 * $currentFactor),$y1-($nodesize / 2 * $currentFactor),($nodesize  * $currentFactor),($nodesize  * $currentFactor))
     $bitmapGraphics.DrawEllipse($pen,$x1-($nodesize / 2 * $currentFactor),$y1-($nodesize / 2 * $currentFactor),($nodesize  * $currentFactor),($nodesize  * $currentFactor))
 
-
     $x1 = $x2
     $y1 = $y2
 }
@@ -227,8 +173,7 @@ for ($i = 1;  $i -lt $iterations; $i++){
 $bitmapGraphics.FillEllipse($brush,$x1-($nodesize / 2 * $currentFactor),$y1-($nodesize / 2 * $currentFactor),($nodesize  * $currentFactor),($nodesize  * $currentFactor))
 $bitmapGraphics.DrawEllipse($pen,$x1-($nodesize / 2 * $currentFactor),$y1-($nodesize / 2 * $currentFactor),($nodesize  * $currentFactor),($nodesize  * $currentFactor))
 
-
-$outFile = $PSScriptRoot  + $runmode + "_" + (Get-Date -UFormat %Y%m%d_%H%M%S) + ".png"
+$outFile = "$workfolder\$scriptname-$(Get-Date -UFormat %Y%m%d_%H%M%S).png"
 $bitmap.Save($outFile, [System.Drawing.Imaging.ImageFormat]::Png)
 Invoke-Item $outFile
 $bitmap.Dispose()
