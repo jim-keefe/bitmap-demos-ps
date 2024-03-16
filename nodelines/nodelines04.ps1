@@ -12,25 +12,25 @@ $myscriptpathparent = (get-item $myscriptpath).Directory
 #==================================================
 
 # Configurable Variables
-$picWidth = (1584/2)
-$picHeight = (396/2)
-$nodesize = 50
-$linewidth = 3
-$iterations = 100
+$picWidth = (1200)
+$picHeight = (627)
+$nodesize = 120
+$linewidth = 120
+$iterations = 15
 $glow = $false
 
 $workfolder = "c:\temp\nodelines"
 
 $colorpercent = @{ # a percent between 0 and 100
-    r = 40
-    g = 40
-    b = 80
+    r = 50
+    g = 50
+    b = 75
 }
 
 $backgroundcolorpercent = @{ # a percent between 0 and 100
-    r = 75
-    g = 75
-    b = 100
+    r = 30
+    g = 30
+    b = 40
 }
 
 #==================================================
